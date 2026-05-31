@@ -9,7 +9,7 @@ class FileType(str, PyEnum):
     VIDEO = "video"
 
 class MediaFile(Base):
-    __tablename__ = "memory_files"
+    __tablename__ = "media_files"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     memory_id: Mapped[str] = mapped_column(String(36), ForeignKey("memories.id"))

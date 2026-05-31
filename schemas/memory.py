@@ -1,4 +1,4 @@
-from fastapi import UploadFile
+from fastapi import UploadFile, Form
 from pydantic import BaseModel
 
 
@@ -16,7 +16,24 @@ class MemoryCreate(BaseModel):
     location: str | None = None
     happened_at: str | None = None
     book_id: str | None = None
-    tags: str | None = None
+    tags: list[str] | None = None
+
+    @classmethod
+    def as_form(cls,
+                content: str | None = Form(None),
+                mood: str | None = Form(None),
+                location: str | None = Form(None),
+                happened_at: str | None = Form(None),
+                book_id: str | None = Form(None),
+                tags: list[str] | None = Form(None)):
+        return cls(
+            content=content,
+            mood=mood,
+            location=location,
+            happened_at=happened_at,
+            book_id=book_id,
+            tags=tags
+        )
     #不支持图片视频文件
     # images: list[UploadFile] | None = None
     # video: UploadFile | None = None

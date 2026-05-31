@@ -1,12 +1,13 @@
+from datetime import date
 from os.path import basename
 
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db_config import get_db
 from core.deps import get_current_user
-from crud.memories import create_new_memoria
+from crud.memories import create_new_memoria, get_all_memoria
 from models import User, Tag, MemoryTag, MediaFile
 from schemas import MemoryCreate, MemoryUpdate, TagSyncRequest, MemoryCreateResponse
 
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/memories",tags=["memories"])
 
 @router.post("", response_model=MemoryCreateResponse)
 async def create_memoria(
-        memoria_data: MemoryCreate = Depends(),
+        memoria_data: MemoryCreate = Depends(MemoryCreate.as_form),
         image: list[UploadFile] | None = File(None),
         video: UploadFile | None = File(None),
         current_user: User = Depends(get_current_user),
@@ -86,17 +87,51 @@ async def create_memoria(
 
 @router.get("")
 async def get_memoria(
+        page: int = Query(1,ge=1),
+        page_size: int = Query(20, ge=1, le=100),
+        book_id: str | None = Query(None, description="按照记忆本过滤"),
+        tag: str | None = Query(None, description="按标签过滤"),
+        mood: str | None = Query(None, description="按心情过滤"),
+        q: str | None = Query(None, description="全文搜索关键词"),
+        start_date: date | None = Query(None, description="开始时间"),
+        end_date: date | None = Query(None, description="结束时间"),
         current_user: User = Depends(get_current_user),
         db: AsyncSession = Depends(get_db)
 ):
     """
     查询记忆列表
+    :param page:
+    :param page_size:
+    :param book_id:
+    :param tag:
+    :param mood:
+    :param q:
+    :param end_date:
+    :param start_date:
     :param current_user: 当前用户
     :param db: 数据库
     :return:
     """
+    result, total = await get_all_memoria(
+        db,
+        current_user.id,
+        page,
+        page_size,
+        book_id,
+        tag,
+        mood,
+        q,
+        start_date,
+        end_date
+    )
 
-    pass
+    return {
+        "items": result,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_page": (total + page_size - 1) // page_size
+    }
 
 @router.get("/{memories_id}")
 async def get_one_memoria(
