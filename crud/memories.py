@@ -1,15 +1,15 @@
-import json
 import os
 import uuid
 from datetime import date
+from os.path import basename
 
 from fastapi import UploadFile
 from sqlalchemy import select, or_, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Memory, Tag, MemoryTag, MediaFile
+from models import Memory, Tag, MemoryTag, MediaFile, MemoryBook
 from models.media_files import FileType
-from schemas import MemoryCreate, tag
+from schemas import MemoryCreate
 
 ALLOWED_IMAGE_EXT = {".png", ".jpg", ".jpeg",".webp"}   #图片类型
 ALLOWED_VIDEO_EXT = {".mp4",".webm"}                    #视频格式
@@ -147,7 +147,6 @@ async def get_all_memoria(
 
 
 
-
 async def create_new_memoria(
         db: AsyncSession,
         memoria_data: MemoryCreate,
@@ -271,3 +270,78 @@ async def create_new_memoria(
     await db.commit()
     await db.refresh(memoria)
     return memoria, upload_files
+
+
+async def get_tags(db: AsyncSession, memoria_id):
+    result_tags = await db.execute(
+        select(Tag.name)
+        .join(MemoryTag, MemoryTag.tag_id == Tag.id)
+        .where(MemoryTag.memory_id == memoria_id)
+    )
+    tags = result_tags.scalars().all()
+    return tags
+
+async def get_media(db: AsyncSession, memoria_id):
+    result_media = await db.execute(
+        select(MediaFile)
+        .where(MediaFile.memory_id == memoria_id)
+        .order_by(MediaFile.upload_order)
+    )
+    media = result_media.scalars().all()
+
+    images = []
+    video = []
+
+    for med in media:
+        if med.file_type == "image":
+            images.append({
+                "id": med.id,
+                "url": f"/api/v1/media/{basename(med.file_path)}",
+                "upload_order": med.upload_order,
+            })
+        if med.file_type == "video":
+            video.append({
+                "id": med.id,
+                "url": f"/api/v1/media/{basename(med.file_path)}",
+                "upload_order": med.upload_order,
+                "file_size": med.file_size
+            })
+
+
+    return images, video
+
+async def get_one_memoria(db: AsyncSession, user_id, memoria_id):
+
+    # 记忆信息
+    #outerjoin: 外连接
+    result_memoria = await db.execute(
+        select(Memory, MemoryBook.title.label("book_title"))
+        .outerjoin(MemoryBook, MemoryBook.id == Memory.book_id)
+        .where(Memory.user_id == user_id, Memory.id == memoria_id)
+    )
+    row = result_memoria.one_or_none()
+
+    if not row:
+        return None
+    memoria, book_title = row
+
+    # 标签信息
+    result_tags = await get_tags(db, memoria_id)
+
+    # 媒体信息
+    result_images, result_video = await get_media(db, memoria_id)
+
+    return {
+        "id": memoria_id,
+        "content": memoria.content,
+        "mood": memoria.mood,
+        "location": memoria.location,
+        "happened_at": memoria.happened_at,
+        "book_id": memoria.book_id,
+        "book_title": book_title,
+        "tags": result_tags,
+        "images": result_images,
+        "video": result_video,
+        "created_at": memoria.created_at,
+        "updated_at": memoria.updated_at,
+    }

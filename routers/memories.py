@@ -7,7 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db_config import get_db
 from core.deps import get_current_user
-from crud.memories import create_new_memoria, get_all_memoria
+from core.ption_handlers import AppException
+from crud.memories import create_new_memoria, get_all_memoria, get_tags, get_media, get_one_memoria
 from models import User, Tag, MemoryTag, MediaFile
 from schemas import MemoryCreate, MemoryUpdate, TagSyncRequest, MemoryCreateResponse
 
@@ -38,38 +39,10 @@ async def create_memoria(
     memoria, uploaded_files = await create_new_memoria(db, memoria_data, current_user.id, image, video)
 
     # 1. 查询标签列表
-    result_tags = await db.execute(
-        select(Tag.name)
-        .join(MemoryTag, MemoryTag.tag_id == Tag.id)
-        .where(MemoryTag.memory_id == memoria.id)
-    )
-    tags = result_tags.scalars().all()
+    tags = await get_tags(db,memoria.id)
 
     # 2. 查询媒体文件
-    result_media = await db.execute(
-        select(MediaFile)
-        .where(MediaFile.memory_id == memoria.id)
-        .order_by(MediaFile.upload_order)
-    )
-    media = result_media.scalars().all()
-
-    images = []
-    videos = None
-
-    for med in media:
-        if med.file_type == "image":
-            images.append({
-                "id": med.id,
-                "url": f"/api/v1/media/{basename(med.file_path)}",
-                "upload_order": med.upload_order,
-            })
-        if med.file_type == "video":
-            videos = {
-                "id": med.id,
-                "url": f"/api/v1/media/{basename(med.file_path)}",
-                "upload_order": med.upload_order,
-                "file_size": med.file_size
-            }
+    images, videos = await get_media(db,memoria.id)
 
     return {
       "id": memoria.id,
@@ -86,7 +59,7 @@ async def create_memoria(
     }
 
 @router.get("")
-async def get_memoria(
+async def get_memories(
         page: int = Query(1,ge=1),
         page_size: int = Query(20, ge=1, le=100),
         book_id: str | None = Query(None, description="按照记忆本过滤"),
@@ -134,7 +107,7 @@ async def get_memoria(
     }
 
 @router.get("/{memories_id}")
-async def get_one_memoria(
+async def get_memoria(
         memories_id: str,
         current_user: User = Depends(get_current_user),
         db: AsyncSession = Depends(get_db)
@@ -147,7 +120,10 @@ async def get_one_memoria(
     :param db: 数据库
     :return:
     """
-    pass
+    result = await get_one_memoria(db, current_user.id, memories_id)
+    if not result:
+        raise AppException(status_code=404, detail="不存在记忆",code="MEMORY_NOT_FOUND")
+    return result
 
 @router.put("/{memories_id}")
 async def update_memoria(
