@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import UploadFile, Form
 from pydantic import BaseModel
 
@@ -14,7 +16,7 @@ class MemoryCreate(BaseModel):
     content: str | None = None
     mood: str | None = None
     location: str | None = None
-    happened_at: str | None = None
+    happened_at: datetime | None = None
     book_id: str | None = None
     tags: list[str] | None = None
 
@@ -23,7 +25,7 @@ class MemoryCreate(BaseModel):
                 content: str | None = Form(None),
                 mood: str | None = Form(None),
                 location: str | None = Form(None),
-                happened_at: str | None = Form(None),
+                happened_at: datetime | None = Form(None),
                 book_id: str | None = Form(None),
                 tags: list[str] | None = Form(None)):
         return cls(
@@ -42,8 +44,8 @@ class MemoryUpdate(BaseModel):
     content: str | None = None
     mood: str | None = None
     location: str | None = None
-    happened_at: str | None = None
-    book_id: str | None = ""
+    happened_at: datetime | None = None
+    book_id: str | None = None
     tags: list[str] | None = None
 
 class MemoryDetail(BaseModel):

@@ -8,8 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config.db_config import get_db
 from core.deps import get_current_user
 from core.ption_handlers import AppException
-from crud.memories import create_new_memoria, get_all_memoria, get_tags, get_media, get_one_memoria
-from models import User, Tag, MemoryTag, MediaFile
+from crud.memories import create_new_memoria, get_all_memoria, get_tags, get_media, get_one_memoria, update_new_memoria, \
+    delete_memoria_by_userid, delete_tag
+from models import User
 from schemas import MemoryCreate, MemoryUpdate, TagSyncRequest, MemoryCreateResponse
 
 router = APIRouter(prefix="/memories",tags=["memories"])
@@ -125,7 +126,7 @@ async def get_memoria(
         raise AppException(status_code=404, detail="不存在记忆",code="MEMORY_NOT_FOUND")
     return result
 
-@router.put("/{memories_id}")
+@router.post("/{memories_id}")
 async def update_memoria(
         memories_id: str,
         memoria_data: MemoryUpdate,
@@ -142,8 +143,11 @@ async def update_memoria(
     :param db: 数据库
     :return:
     """
-
-    pass
+    user_id = current_user.id
+    result = await update_new_memoria(db, user_id, memories_id, memoria_data)
+    if not result:
+        AppException(status_code=404, detail="该记忆不存在", code="MEMORY_NOT_FOUND")
+    return result
 
 @router.delete("/{memories_id}")
 async def delete_memoria(
@@ -158,7 +162,12 @@ async def delete_memoria(
     :param db: 数据库
     :return:
     """
-    pass
+    user_id = current_user.id
+    result = await delete_memoria_by_userid(db, user_id, memories_id)
+
+    if not result:
+        raise AppException(status_code=404, detail="记忆不存在", code="MEMORY_NOT_FOUND")
+    return {"message": "记忆已删除"}
 
 @router.post("/{memories_id}/tags")
 async def update_memoria_tags(
@@ -192,5 +201,10 @@ async def delete_memoria_tags(
     :param db: 数据库
     :return:
     """
-
-    pass
+    user_id = current_user.id
+    result = await delete_tag(db, user_id, memories_id, tag_id)
+    if result == "MEMORY_NOT_FOUND":
+        raise AppException(status_code=404, detail="记忆不存在", code="MEMORY_NOT_FOUND")
+    if result == "TAG_NOT_FOUND":
+        raise AppException(status_code=404, detail="标签不存在或者该记忆没有该标签", code="TAG_NOT_FOUND")
+    return {"message": "标签已移除"}
