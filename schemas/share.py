@@ -10,7 +10,7 @@ class ShareImageItem(BaseModel):
 
 
 class ShareCreate(BaseModel):
-    expire_hours: int | None = Field(default=24,ge=1, lt=48)
+    expire_hours: int | None = Field(default=24, ge=1, le=48)
     password: str | None = Field(default=None, max_length=10, min_length=4)
 
 class ShareResponse(BaseModel):

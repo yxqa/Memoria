@@ -1,8 +1,6 @@
 from datetime import date
-from os.path import basename
 
 from fastapi import APIRouter, Depends, UploadFile, File, Query
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db_config import get_db

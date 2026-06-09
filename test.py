@@ -89,6 +89,16 @@ def delete_tag(memoria_id: str, tag_id: str):
     print(resp.status_code)
     print(resp.json())
 
+def search_memoria(q: str):
+    token = get_access_token()
+    print(token)
+    headers = {"Authorization": f"Bearer {token}"}
+    url = f"{BASE_URL}/api/v1/search"
+    params = {"q": q}
+    resp = requests.get(url, headers=headers, params=params)
+    print(resp.json())
+    print(resp.status_code)
+
 
 if __name__ == "__main__":
     # 示例用法
@@ -97,4 +107,5 @@ if __name__ == "__main__":
     # get_one_memoria("1541a841-b3d0-478e-81dd-c5e559fc7a98")
     # update_memoria("1541a841-b3d0-478e-81dd-c5e559fc7a98")
     # delete_memoria("4b6e3543-40fc-40d6-92bd-4bfa33ed655d")
-    delete_tag("60764e34-a79b-4bc5-8ef6-0b4025586ec4", "7c46c635-d94a-4e28-bb43-94d3283c9548")
+    # delete_tag("60764e34-a79b-4bc5-8ef6-0b4025586ec4", "7c46c635-d94a-4e28-bb43-94d3283c9548")
+    search_memoria("今天")
