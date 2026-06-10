@@ -11,7 +11,7 @@ from core.ption_handlers import AppException
 from crud.media import get_media_file
 from models import User
 
-router = APIRouter(prefix="media", tags=["media"])
+router = APIRouter(prefix="/media", tags=["media"])
 
 
 @router.get("{filename}")

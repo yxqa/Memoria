@@ -124,7 +124,7 @@ async def get_memoria(
         raise AppException(status_code=404, detail="不存在记忆",code="MEMORY_NOT_FOUND")
     return result
 
-@router.post("/{memories_id}")
+@router.patch("/{memories_id}")
 async def update_memoria(
         memories_id: str,
         memoria_data: MemoryUpdate,
