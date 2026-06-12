@@ -10,11 +10,12 @@ from core.deps import get_current_user
 from core.ption_handlers import AppException
 from crud.media import get_media_file
 from models import User
+from config.settings import UPLOAD_DIR
 
 router = APIRouter(prefix="/media", tags=["media"])
 
 
-@router.get("{filename}")
+@router.get("/{filename}")
 async def read_file(
         filename: str,
         current_user: User = Depends(get_current_user),
@@ -27,8 +28,13 @@ async def read_file(
     if status == "FORBIDDEN":
         raise AppException(status_code=403, detail="无权访问", code="FORBIDDEN")
 
+    abs_path = UPLOAD_DIR / media.file_path
+    print(f"[DEBUG] UPLOAD_DIR: {UPLOAD_DIR}")
+    print(f"[DEBUG] file_path: {media.file_path}")
+    print(f"[DEBUG] abs_path: {abs_path}, exists: {os.path.exists(abs_path)}")
+
     #校验磁盘文件是否存在
-    if not os.path.exists(media.file_path):
+    if not os.path.exists(abs_path):
         raise HTTPException(status_code=404, detail="文件不存在")
 
     #自动识别Content-Type
@@ -36,7 +42,7 @@ async def read_file(
     content_type = content_type or "application/octet-stream"
 
     return FileResponse(
-        path=media.file_path,
+        path=abs_path,
         media_type=content_type,
         filename=filename,
     )

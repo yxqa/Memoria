@@ -12,6 +12,6 @@ async def get_media_file(db: AsyncSession, userid: str, filename: str):
     media = result.scalar_one_or_none()
     if not media:
         return "FILE NOT FOUND", None
-    if media.id != userid:
+    if media.user_id != userid:
         return "FORBIDDEN", None
     return "OK", media

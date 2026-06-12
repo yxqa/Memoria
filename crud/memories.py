@@ -13,7 +13,7 @@ from schemas import MemoryCreate, MemoryUpdate
 
 ALLOWED_IMAGE_EXT = {".png", ".jpg", ".jpeg",".webp"}   #图片类型
 ALLOWED_VIDEO_EXT = {".mp4",".webm"}                    #视频格式
-MAX_IMAGE_SIZE = 10 * 1024 * 1024                       #图片最大大小
+MAX_IMAGE_SIZE = 20 * 1024 * 1024                       #图片最大大小
 MAX_VIDEO_SIZE = 100 * 1024 * 1024                      #视频最大大小
 MAX_IMAGE_COUNT = 9                                     #图片数量
 UPLOAD_BASE = "uploads"
@@ -211,7 +211,7 @@ async def create_new_memoria(
         if ext not in ALLOWED_IMAGE_EXT:
             raise ValueError(f"不支持的图片类型:{ext}")
         if img.size > MAX_IMAGE_SIZE:
-            raise ValueError(f"图片{img.filename}大小超过10MB")
+            raise ValueError(f"图片{img.filename}大小超过20MB")
 
     # 3b. 校验视频
     if video:
