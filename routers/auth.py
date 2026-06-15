@@ -56,6 +56,10 @@ async def login_user(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
         "expires_at": 3600
     }
 
+@router.post("/refresh")
+async def update_refresh_token(refresh_token, db: AsyncSession = Depends(get_db)):
+    pass
+
 @router.get("/me")
 async def get_user(
         current_user: User = Depends(get_current_user),
@@ -81,3 +85,7 @@ async def get_user(
       "book_count": book_count,
       "created_at": current_user.created_at.isoformat(),
     }
+
+@router.patch("/me")
+async def update_user_pwd(old_pwd: str, new_pwd: str, db: AsyncSession = Depends(get_db)):
+    pass

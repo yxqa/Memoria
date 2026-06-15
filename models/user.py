@@ -14,3 +14,5 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, comment="创建时间")
+    nickname: Mapped[str] = mapped_column(String(50), nullable=True)
+    bio: Mapped[str] = mapped_column(String(255), nullable=True)

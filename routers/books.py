@@ -59,7 +59,7 @@ async def get_memory_books(
         })
     return {"items": item}
 
-@router.put("/{book_id}")
+@router.patch("/{book_id}")
 async def update_book(
         book_id: str,
         book_data: BookUpdate,
